@@ -39,7 +39,7 @@ def calculate_average(marks):
     for mark in marks:
         total += mark
 
-    average = total / len(mark)
+    average = total / len(marks)
 
     return round(average, 2)
 
@@ -80,7 +80,7 @@ def analyze_students(students):
     for student in students:
 
         avg = calculate_average(student["marks"])
-        grade = calculate_grade(student["marks"])
+        grade = calculate_grade(avg)
         status = attendance_status(student["attendance"])
 
         result = {
@@ -102,7 +102,7 @@ def analyze_students(students):
         if department_data[dept]["highest"] is None:
             department_data[dept]["highest"] = result
         elif avg > department_data[dept]["highest"]["average"]:
-            department_data[dept]["highest"] = student
+            department_data[dept]["highest"] = result
 
         if department_data[dept]["lowest"] is None:
             department_data[dept]["lowest"] = result
@@ -124,7 +124,7 @@ def find_top_students(results, limit=3):
     sorted_students = sorted(
         results,
         key=lambda x: x["average"],
-        reverse=False
+        reverse=True
     )
 
     return sorted_students[:limit]
@@ -133,7 +133,7 @@ def find_top_students(results, limit=3):
 def search_student(results, name):
 
     for student in results:
-        if student["name"].lower == name.lower():
+        if student["name"].lower() == name.lower():
             return student
 
     return None
@@ -186,7 +186,7 @@ def main():
 
     top_students = find_top_students(results)
 
-    for position, student in enumerate(top_students):
+    for position, student in enumerate(top_students, 1):
         print(
             position,
             student["name"],
@@ -237,3 +237,38 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def test_calculate_average():
+    assert calculate_average([80, 90, 100]) == 90.0
+    assert calculate_average([85, 90, 78, 92]) == 86.25
+
+
+def test_calculate_grade():
+    assert calculate_grade(95) == "A+"
+    assert calculate_grade(85) == "A"
+    assert calculate_grade(75) == "B"
+    assert calculate_grade(65) == "C"
+    assert calculate_grade(55) == "D"
+    assert calculate_grade(45) == "F"
+
+
+def test_analyze_students():
+    results, departments = analyze_students(students)
+    assert len(results) == 4
+    assert departments["CSE"]["highest"]["name"] == "Arun"
+    assert departments["CSE"]["lowest"]["name"] == "Karthik"
+
+
+def test_find_top_students():
+    results, _ = analyze_students(students)
+    top = find_top_students(results, limit=2)
+    assert len(top) == 2
+    assert top[0]["name"] == "Divya"
+    assert top[1]["name"] == "Priya"
+
+
+def test_search_student():
+    results, _ = analyze_students(students)
+    assert search_student(results, "arun")["id"] == 101
+    assert search_student(results, "NonExistent") is None
